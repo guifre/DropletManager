@@ -1,7 +1,7 @@
 import logging
 from threading import Timer
 
-TIME_TO_STOP_DROPLET = 3480  # 58 minutes in seconds
+TIME_TO_STOP_DROPLET = 3480.0  # 58 minutes in seconds
 
 
 class TimeOrchestrator:
@@ -15,7 +15,7 @@ class TimeOrchestrator:
         if self.started is False:
             self.started = True
             self.stop_requested = False
-            Timer(TIME_TO_STOP_DROPLET, self.stop_droplet, target)
+            Timer(TIME_TO_STOP_DROPLET, self.stop_droplet, [target], {}).start()
             logging.info("starting and scheduled stop process")
             self.droplet_ip = self.digital_ocean_connector.start(target)
         return self.droplet_ip
@@ -26,6 +26,9 @@ class TimeOrchestrator:
         return 'deletion scheduled'
 
     def stop_droplet(self, target):
-        if self.stop_requested and self.started is True:
+        logging.info(
+            "running stop, stop requested is " + str(self.stop_requested) + " and started " + str(self.started))
+        if self.stop_requested and self.started:
+            logging.info("stopping")
             self.digital_ocean_connector.stop(target)
             self.started = False
